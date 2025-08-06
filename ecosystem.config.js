@@ -1,18 +1,18 @@
 module.exports = {
   apps: [{
     name: 'dasy-csat-api',
-    script: 'dist/main.js',
+    script: 'dist/src/main.js',
     instances: 1,
     autorestart: true,
     watch: false,
     max_memory_restart: '1G',
     env: {
       NODE_ENV: 'production',
-      PORT: 3001
+      PORT: 3000
     },
     env_production: {
       NODE_ENV: 'production',
-      PORT: 3001
+      PORT: 3000
     },
     error_file: './logs/err.log',
     out_file: './logs/out.log',

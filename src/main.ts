@@ -19,7 +19,7 @@ async function bootstrap() {
   });
   
   // Bind to 0.0.0.0 to accept connections from any IP
-  const port = process.env.PORT ?? 3001;
+  const port = process.env.PORT ?? 3000;
   const host = isDevelopment ? 'localhost' : '0.0.0.0';
   
   await app.listen(port, host);
