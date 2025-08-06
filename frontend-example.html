@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Filter Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .filter-section {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .filter-group {
+            margin-bottom: 15px;
+        }
+        .filter-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .filter-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .filter-option {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .filter-option input[type="checkbox"] {
+            margin: 0;
+        }
+        .results-section {
+            margin-top: 20px;
+        }
+        .document-item {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            background: white;
+        }
+        .document-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .document-meta {
+            color: #666;
+            font-size: 0.9em;
+        }
+        .apply-filters-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .apply-filters-btn:hover {
+            background: #0056b3;
+        }
+        .loading {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <h1>Document Filter Example</h1>
+    
+    <div class="filter-section">
+        <h2>Filters</h2>
+        
+        <div class="filter-group">
+            <label>Grade Level:</label>
+            <div class="filter-options" id="gradeLevelOptions">
+                <div class="loading">Loading...</div>
+            </div>
+        </div>
+        
+        <div class="filter-group">
+            <label>Category:</label>
+            <div class="filter-options" id="categoryOptions">
+                <div class="loading">Loading...</div>
+            </div>
+        </div>
+        
+        <div class="filter-group">
+            <label>Exam Year:</label>
+            <div class="filter-options" id="examYearOptions">
+                <div class="loading">Loading...</div>
+            </div>
+        </div>
+        
+        <div class="filter-group">
+            <label>Exam Month:</label>
+            <div class="filter-options" id="examMonthOptions">
+                <div class="loading">Loading...</div>
+            </div>
+        </div>
+        
+        <button class="apply-filters-btn" onclick="applyFilters()">Apply Filters</button>
+    </div>
+    
+    <div class="results-section">
+        <h2>Results (<span id="resultCount">0</span> documents)</h2>
+        <div id="results">
+            <div class="loading">No filters applied yet</div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:3001/documents'; // Adjust this to your API URL
+        
+        // Store available filter values
+        let availableFilters = {
+            grade_levels: [],
+            categories: [],
+            exam_years: [],
+            exam_months: []
+        };
+        
+        // Store selected filter values
+        let selectedFilters = {
+            grade_levels: [],
+            categories: [],
+            exam_years: [],
+            exam_months: []
+        };
+        
+        // Load available filter values on page load
+        window.addEventListener('load', async () => {
+            await loadAvailableFilters();
+            renderFilterOptions();
+        });
+        
+        async function loadAvailableFilters() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/filters/available`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    availableFilters = result.data;
+                } else {
+                    console.error('Failed to load filter options');
+                }
+            } catch (error) {
+                console.error('Error loading filter options:', error);
+            }
+        }
+        
+        function renderFilterOptions() {
+            // Render grade level options
+            const gradeLevelContainer = document.getElementById('gradeLevelOptions');
+            gradeLevelContainer.innerHTML = availableFilters.grade_levels.map(level => `
+                <div class="filter-option">
+                    <input type="checkbox" id="grade_${level}" value="${level}" onchange="updateSelectedFilters('grade_levels', '${level}', this.checked)">
+                    <label for="grade_${level}">${level}</label>
+                </div>
+            `).join('');
+            
+            // Render category options
+            const categoryContainer = document.getElementById('categoryOptions');
+            categoryContainer.innerHTML = availableFilters.categories.map(category => `
+                <div class="filter-option">
+                    <input type="checkbox" id="category_${category}" value="${category}" onchange="updateSelectedFilters('categories', '${category}', this.checked)">
+                    <label for="category_${category}">${category}</label>
+                </div>
+            `).join('');
+            
+            // Render exam year options
+            const examYearContainer = document.getElementById('examYearOptions');
+            examYearContainer.innerHTML = availableFilters.exam_years.map(year => `
+                <div class="filter-option">
+                    <input type="checkbox" id="year_${year}" value="${year}" onchange="updateSelectedFilters('exam_years', '${year}', this.checked)">
+                    <label for="year_${year}">${year}</label>
+                </div>
+            `).join('');
+            
+            // Render exam month options
+            const examMonthContainer = document.getElementById('examMonthOptions');
+            examMonthContainer.innerHTML = availableFilters.exam_months.map(month => `
+                <div class="filter-option">
+                    <input type="checkbox" id="month_${month}" value="${month}" onchange="updateSelectedFilters('exam_months', '${month}', this.checked)">
+                    <label for="month_${month}">${month}</label>
+                </div>
+            `).join('');
+        }
+        
+        function updateSelectedFilters(filterType, value, isChecked) {
+            if (isChecked) {
+                if (!selectedFilters[filterType].includes(value)) {
+                    selectedFilters[filterType].push(value);
+                }
+            } else {
+                selectedFilters[filterType] = selectedFilters[filterType].filter(item => item !== value);
+            }
+        }
+        
+        async function applyFilters() {
+            const resultsContainer = document.getElementById('results');
+            const resultCountSpan = document.getElementById('resultCount');
+            
+            resultsContainer.innerHTML = '<div class="loading">Loading results...</div>';
+            
+            try {
+                // Build query parameters
+                const params = new URLSearchParams();
+                
+                if (selectedFilters.grade_levels.length > 0) {
+                    params.append('grade_levels', selectedFilters.grade_levels.join(','));
+                }
+                
+                if (selectedFilters.categories.length > 0) {
+                    params.append('categories', selectedFilters.categories.join(','));
+                }
+                
+                if (selectedFilters.exam_years.length > 0) {
+                    params.append('exam_years', selectedFilters.exam_years.join(','));
+                }
+                
+                if (selectedFilters.exam_months.length > 0) {
+                    params.append('exam_months', selectedFilters.exam_months.join(','));
+                }
+                
+                const url = `${API_BASE_URL}/filtered?${params.toString()}`;
+                const response = await fetch(url);
+                const result = await response.json();
+                
+                if (result.success) {
+                    displayResults(result.data);
+                    resultCountSpan.textContent = result.count;
+                } else {
+                    resultsContainer.innerHTML = '<div class="loading">Error loading results</div>';
+                }
+            } catch (error) {
+                console.error('Error applying filters:', error);
+                resultsContainer.innerHTML = '<div class="loading">Error loading results</div>';
+            }
+        }
+        
+        function displayResults(documents) {
+            const resultsContainer = document.getElementById('results');
+            
+            if (documents.length === 0) {
+                resultsContainer.innerHTML = '<div class="loading">No documents found matching the selected filters</div>';
+                return;
+            }
+            
+            const documentsHtml = documents.map(doc => `
+                <div class="document-item">
+                    <div class="document-title">${doc.title}</div>
+                    <div class="document-meta">
+                        Subject: ${doc.subject} | 
+                        Category: ${doc.category} | 
+                        Grade: ${doc.grade_level} | 
+                        Year: ${doc.exam_year} | 
+                        Month: ${doc.exam_month}
+                    </div>
+                </div>
+            `).join('');
+            
+            resultsContainer.innerHTML = documentsHtml;
+        }
+    </script>
+</body>
+</html> 

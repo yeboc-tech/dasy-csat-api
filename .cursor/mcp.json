@@ -1,0 +1,13 @@
+{
+    "mcpServers": {
+        "dasy-csat-postgres": {
+            "command": "uv",
+            "args": [
+                "--directory",
+                "/Users/joonnam/Workspace/dasy-csat-mcp/dasy-csat-postgres",
+                "run",
+                "dasy-csat-postgres.py"
+            ]
+        }
+    }
+}
